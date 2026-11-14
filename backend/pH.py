@@ -105,3 +105,9 @@ except requests.RequestException as error:
     print("API request failed:", error)
 except (ValueError, KeyError) as error:
     print("Data error:", error)
+
+
+
+
+
+    
