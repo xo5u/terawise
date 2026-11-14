@@ -5,6 +5,7 @@ import Header from "./comps/header.jsx";
 import Map from "./comps/map.jsx";
 import Results from "./comps/Result.jsx";
 import './styles.css';
+import Footer from './comps/footer.jsx';
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
         </section>
       </main>
       <Results />
+      <Footer />
     </>
   );
 }

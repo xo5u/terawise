@@ -1,83 +1,140 @@
 
-import { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { useRef, useState } from "react";
+import { MapContainer, TileLayer, FeatureGroup } from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
+import { area } from "@turf/area";
+
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
 import "./Map.css";
 
-const defaultPosition = [39.8283, -98.5795];
-
-function LocationMarker({ position, onSelect }) {
-  useMapEvents({
-    click(e) {
-      onSelect(e.latlng);
-    },
-  });
-
-  return (
-    <Marker position={position}>
-      <Popup>
-        {position[0].toFixed(4)}, {position[1].toFixed(4)}
-      </Popup>
-    </Marker>
-  );
-}
-
 export default function Map() {
-  const [position, setPosition] = useState(defaultPosition);
-  const [error, setError] = useState(null);
+  const position = [39.8283, -98.5795];
 
-  // Approximate boundaries of the contiguous USA
   const usaBounds = [
-    [24.0, -125.0], // Southwest
-    [49.5, -66.0]   // Northeast
+    [24.0, -125.0],
+    [49.5, -66.0]
   ];
 
-  async function handleSelect(latlng) {
-    setPosition([latlng.lat, latlng.lng]);
-    setError(null);
+  const featureGroupRef = useRef(null);
+  const [farmArea, setFarmArea] = useState(null);
+  const [coordinates, setCoordinates] = useState(null);
 
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/location", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat: latlng.lat, lng: latlng.lng }),
-      });
+  // Calculate selected area
+  function calculateArea(layer) {
+    const squareMeters = area(layer.toGeoJSON());
 
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
+    const acres = squareMeters / 4046.856;
+    const hectares = squareMeters / 10000;
+
+    setFarmArea({
+      acres: acres.toFixed(2),
+      hectares: hectares.toFixed(2),
+      squareMeters: squareMeters.toFixed(2)
+    });
+
+    // Get the center of the selected farm
+    const center = layer.getBounds().getCenter();
+
+    setCoordinates({
+      latitude: center.lat.toFixed(6),
+      longitude: center.lng.toFixed(6)
+    });
+  }
+
+  // When user finishes drawing
+  function handleCreated(e) {
+    const layer = e.layer;
+    const group = featureGroupRef.current;
+
+    // Keep only one farm boundary
+    group.eachLayer((existingLayer) => {
+      if (existingLayer !== layer) {
+        group.removeLayer(existingLayer);
       }
+    });
 
-      const confirmed = await res.json();
-      setPosition([confirmed.lat, confirmed.lng]);
-    } catch (err) {
-      setError("Could not reach the server to confirm this location.");
-    }
+    calculateArea(layer);
+  }
+
+  // When user edits the boundary
+  function handleEdited(e) {
+    e.layers.eachLayer((layer) => {
+      calculateArea(layer);
+    });
+  }
+
+  // When user deletes the boundary
+  function handleDeleted() {
+    setFarmArea(null);
+    setCoordinates(null);
   }
 
   return (
     <div className="map-wrapper">
-      <h2>Select Your Farm Location</h2>
-      <p>Click anywhere within the United States to drop a pin.</p>
-      <p className="map-coords">
-        Lat: {position[0].toFixed(4)}, Lng: {position[1].toFixed(4)}
-      </p>
-      {error && <p className="map-error">{error}</p>}
 
-      <MapContainer
-        center={defaultPosition}
+      <h2>Select Your Farm Area</h2>
+      <p>Draw a rectangle or polygon around your farm.</p>
+
+        <MapContainer
+        center={position}
         zoom={4}
         minZoom={4}
+        maxZoom={19}
         maxBounds={usaBounds}
         maxBoundsViscosity={1.0}
         className="farm-map"
-      >
+        >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <LocationMarker position={position} onSelect={handleSelect} />
+        <FeatureGroup ref={featureGroupRef}>
+          <EditControl
+            position="topright"
+            onCreated={handleCreated}
+            onEdited={handleEdited}
+            onDeleted={handleDeleted}
+            draw={{
+              rectangle: false,
+              polygon: true,
+              polyline: false,
+              circle: false,
+              marker: false,
+              circlemarker: false
+            }}
+          />
+        </FeatureGroup>
+
       </MapContainer>
+
+      {farmArea && (
+        <div className="area-result">
+          <h3>Selected Farm Area</h3>
+
+          <div className="area-values">
+            <div>
+              <span>Acres</span>
+              <strong>{farmArea.acres}</strong>
+            </div>
+
+            <div>
+              <span>Hectares</span>
+              <strong>{farmArea.hectares}</strong>
+            </div>
+          </div>
+
+          <p>Area: {farmArea.squareMeters} m²</p>
+
+          <p>
+            Latitude: {coordinates.latitude}
+            <br />
+            Longitude: {coordinates.longitude}
+          </p>
+        </div>
+      )}
+
     </div>
   );
 }
