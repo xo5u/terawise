@@ -29,3 +29,42 @@
 .map-error {
   color: #b00020;
 }
+
+.area-result {
+  margin-top: 20px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.area-result h3 {
+  margin: 0 0 14px;
+  color: #286638;
+  font-size: 18px;
+}
+
+.area-values {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 12px;
+}
+
+.area-values span {
+  display: block;
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.area-values strong {
+  font-size: 22px;
+  color: #39864B;
+}
+
+.area-result p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #555;
+}
