@@ -73,22 +73,24 @@ def get_precipitation(lat, lon):
     return {"date": latest.isoformat(), "rainfall_mm": readings[latest]}
 
 
-def get_annual_precipitation(lat, lon, period="past", *, today=None):
-    """Return a complete past year or an explicitly labeled next-year estimate."""
+def get_annual_precipitation(lat, lon, period="past", years=1, *, today=None):
+    """Return `years` complete past years, or a historical-average estimate for the next `years` years."""
     validate_location(lat, lon)
+    if not isinstance(years, int) or years < 1:
+        raise ValueError("years must be an integer >= 1")
     today = today or datetime.now(timezone.utc).date()
     if period not in ("past", "next"):
         raise ValueError("Period must be 'past' or 'next'")
 
     if period == "past":
         end = today - timedelta(days=ARCHIVE_DELAY_DAYS)
-        start = shift_year(end, -1) + timedelta(days=1)
+        start = shift_year(end, -years) + timedelta(days=1)
         readings = query_rainfall(lat, lon, start, end)
         require_complete(readings, start, end)
         daily_values = readings
         metadata = {
             "data_type": "historical_reanalysis",
-            "note": f"Latest complete 12 months ending {ARCHIVE_DELAY_DAYS} days ago; rainfall excludes snow.",
+            "note": f"Latest complete {years} year(s) ending {ARCHIVE_DELAY_DAYS} days ago; rainfall excludes snow.",
         }
     else:
         # Five complete calendar years avoid partial seasonal samples.
@@ -104,7 +106,7 @@ def get_annual_precipitation(lat, lon, period="past", *, today=None):
             month: sum(values) / len(values) for month, values in monthly_samples.items()
         }
         start = today + timedelta(days=1)
-        end = shift_year(today, 1)
+        end = shift_year(today, years)
         daily_values = {}
         day = start
         while day <= end:
@@ -114,7 +116,7 @@ def get_annual_precipitation(lat, lon, period="past", *, today=None):
             "data_type": "historical_average_estimate",
             "baseline_start_date": baseline_start.isoformat(),
             "baseline_end_date": baseline_end.isoformat(),
-            "note": "Estimate from five years of monthly average daily rainfall, not a weather forecast. Actual rainfall may differ. Rainfall excludes snow.",
+            "note": f"Estimate for the next {years} year(s) from five years of monthly average daily rainfall, not a weather forecast. Actual rainfall may differ. Rainfall excludes snow.",
         }
 
     monthly_totals = defaultdict(float)
