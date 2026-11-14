@@ -64,7 +64,34 @@ def get_soil_ph(lat, lon):
     headers = table[0]
     rows = table[1:]
 
-    return [dict(zip(headers, row)) for row in rows]
+    results = [dict(zip(headers, row)) for row in rows]
+    return filter_relevant_depths(results)
+
+def filter_relevant_depths(results):
+    """
+    Keep only the two most relevant soil layers:
+    1. Surface layer (fertilizer zone ~0-20 cm)
+    2. Next layer (around average root depth)
+    """
+    relevant = []
+
+    for item in results:
+        try:
+            top = float(item["depth_top_cm"])
+            bottom = float(item["depth_bottom_cm"])
+        except (TypeError, ValueError):
+            continue
+
+        # Layer 1:fertilizer (0-20 cm)
+        if top <= 5 and bottom <= 25:
+            relevant.append(item)
+
+        # Layer 2: Upper root zone (15-40 cm)
+        elif top >= 10 and top <= 25 and bottom <= 50:
+            relevant.append(item)
+
+    # Keep maximum 2 results
+    return relevant[:2]
 
 
 def save_csv(rows, filename="ph_soil.csv"):
@@ -110,4 +137,3 @@ except (ValueError, KeyError) as error:
 
 
 
-    
