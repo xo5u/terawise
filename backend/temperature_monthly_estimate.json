@@ -1,0 +1,74 @@
+[
+    {
+        "month": "2026-12",
+        "average": "13.7",
+        "maximum": "19.08",
+        "minimum": "9.89"
+    },
+    {
+        "month": "2027-01",
+        "average": "11.61",
+        "maximum": "16.76",
+        "minimum": "7.85"
+    },
+    {
+        "month": "2027-02",
+        "average": "12.2",
+        "maximum": "17.68",
+        "minimum": "8.17"
+    },
+    {
+        "month": "2027-03",
+        "average": "14.65",
+        "maximum": "20.93",
+        "minimum": "10.04"
+    },
+    {
+        "month": "2027-04",
+        "average": "17.85",
+        "maximum": "24.95",
+        "minimum": "12.5"
+    },
+    {
+        "month": "2027-05",
+        "average": "21.69",
+        "maximum": "29.13",
+        "minimum": "15.85"
+    },
+    {
+        "month": "2027-06",
+        "average": "24.84",
+        "maximum": "32.14",
+        "minimum": "19.02"
+    },
+    {
+        "month": "2027-07",
+        "average": "26.86",
+        "maximum": "34.03",
+        "minimum": "21.35"
+    },
+    {
+        "month": "2027-08",
+        "average": "27.16",
+        "maximum": "34.3",
+        "minimum": "22.23"
+    },
+    {
+        "month": "2027-09",
+        "average": "25.62",
+        "maximum": "32.69",
+        "minimum": "20.93"
+    },
+    {
+        "month": "2027-10",
+        "average": "22.89",
+        "maximum": "29.59",
+        "minimum": "18.48"
+    },
+    {
+        "month": "2027-11",
+        "average": "18.18",
+        "maximum": "24.25",
+        "minimum": "14.04"
+    }
+]
