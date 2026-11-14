@@ -2,6 +2,7 @@
 
 import argparse
 import calendar
+import csv
 import json
 import math
 from collections import defaultdict
@@ -142,6 +143,20 @@ def get_annual_precipitation(lat, lon, period="past", years=1, *, today=None):
     }
 
 
+def save_csv(result, filename="rain_monthly.csv"):
+    """Save the monthly rainfall to a CSV file."""
+    with open(filename, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=["month", "days_counted", "rainfall_mm"])
+        writer.writeheader()
+        writer.writerows(result["monthly"])
+        writer.writerow({
+            "month": "total",
+            "days_counted": result["days_counted"],
+            "rainfall_mm": result["total_rainfall_mm"],
+        })
+    return filename
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--lat", type=float, default=32.2211)
@@ -158,6 +173,7 @@ def main():
     except (requests.RequestException, RuntimeError, ValueError) as exc:
         parser.exit(1, f"Rainfall request failed: {exc}\n")
     print(json.dumps(result, indent=2))
+    print(f"\nSaved: {save_csv(result)}")
 
 
 if __name__ == "__main__":
