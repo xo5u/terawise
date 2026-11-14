@@ -1,21 +1,18 @@
 import argparse
 import csv
 from collections import defaultdict
+from datetime import date
 from statistics import mean
 
 import requests
 
-# =====================================
-# CONFIGURATION
-# =====================================
-LAT = 32.2211
-LON = 35.2544
+import requests
+
+URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
 HISTORY_START = 2001
 HISTORY_END = 2025
-PREDICTION_YEAR = 2027
 
-URL = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
 # =====================================
 # CROP SEASONS
