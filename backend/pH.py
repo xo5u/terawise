@@ -1,3 +1,5 @@
+import csv
+import re
 
 import requests
 
@@ -6,6 +8,14 @@ API_URL = "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest"
 # Test location: California, USA
 LAT = 37.368402
 LON = -121.771
+
+
+def clean_soil_name(name):
+    """Remove slope info and MLRA from the soil name."""
+    name = re.sub(r",?\s*MLRA\s*\d+[A-Za-z]*", "", name)
+    name = re.sub(r",?\s*[\d.]+\s*to\s*[\d.]+\s*percent\s*slopes?", "", name)
+    name = re.sub(r",?\s*[\d.]+\s*percent\s*slopes?", "", name)
+    return name.strip(" ,")
 
 
 def get_soil_ph(lat, lon):
@@ -57,18 +67,39 @@ def get_soil_ph(lat, lon):
     return [dict(zip(headers, row)) for row in rows]
 
 
+def save_csv(rows, filename="ph_soil.csv"):
+    with open(filename, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["soil", "depth_top_cm", "depth_bottom_cm", "ph"]
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+    return filename
+
+
 try:
     results = get_soil_ph(LAT, LON)
 
     if not results:
         print("No soil pH data found for this location.")
     else:
+        rows = []
         for item in results:
+            row = {
+                "soil": clean_soil_name(item["soil_name"]),
+                "depth_top_cm": item["depth_top_cm"],
+                "depth_bottom_cm": item["depth_bottom_cm"],
+                "ph": item["ph"],
+            }
+            rows.append(row)
             print(
-                f"Soil: {item['soil_name']} | "
-                f"Depth: {item['depth_top_cm']}-{item['depth_bottom_cm']} cm | "
-                f"pH: {item['ph']}"
+                f"Soil: {row['soil']} | "
+                f"Depth: {row['depth_top_cm']}-{row['depth_bottom_cm']} cm | "
+                f"pH: {row['ph']}"
             )
+
+        print(f"\nSaved: {save_csv(rows)}")
 
 except requests.RequestException as error:
     print("API request failed:", error)
