@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import Header from "./comps/Header.jsx";
 import './styles.css';
 
 function App() {
@@ -27,22 +28,12 @@ function App() {
   }, [attempt]);
 
   return (
+    <>
+    <Header />
     <main>
-      <p className="eyebrow">TERAWISE</p>
-      <h1>Ready to build.</h1>
-      <p>Your React frontend and FastAPI backend are set up.</p>
-      <section aria-label="API connection" aria-live="polite">
-        <h2>Backend connection</h2>
-        <p>
-          {connection.status === 'loading' && 'Connecting to the API…'}
-          {connection.status === 'connected' && connection.message}
-          {connection.status === 'error' && 'Unable to reach the API. Start the backend, then try again.'}
-        </p>
-        <button disabled={connection.status === 'loading'} onClick={() => setAttempt((value) => value + 1)}>
-          Check connection
-        </button>
-      </section>
+      
     </main>
+    </>
   );
 }
 
