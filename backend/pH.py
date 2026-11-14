@@ -105,6 +105,17 @@ def save_csv(rows, filename="ph_soil.csv"):
     return filename
 
 
+def save_csv(rows, filename="ph_soil.csv"):
+    with open(filename, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["soil", "depth_top_cm", "depth_bottom_cm", "ph"]
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+    return filename
+
+
 try:
     results = get_soil_ph(LAT, LON)
 
@@ -132,8 +143,3 @@ except requests.RequestException as error:
     print("API request failed:", error)
 except (ValueError, KeyError) as error:
     print("Data error:", error)
-
-
-
-
-
