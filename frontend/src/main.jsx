@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Header from "./comps/header.jsx";
 import Map from "./comps/map.jsx";
+import Results from "./comps/Result.jsx";
 import './styles.css';
 
 function App() {
@@ -43,13 +44,13 @@ function App() {
               <option>Other</option>
             </select>
           </div>
-
+          <input type="text" placeholder="Total cost" className="cost-inputs" />
           <button className="analyze-btn">
             Analyze My Farm
           </button>
         </section>
-
       </main>
+      <Results />
     </>
   );
 }
