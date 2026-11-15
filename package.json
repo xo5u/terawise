@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace frontend",
-    "dev:server": "backend/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000",
+    "dev:server": "backend\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000",
     "build": "npm run build --workspace frontend",
     "preview": "npm run preview --workspace frontend"
   },
@@ -15,6 +15,7 @@
   "dependencies": {
     "@turf/area": "^7.4.0",
     "leaflet-draw": "^1.0.4",
+    "maplibre-gl": "^6.18.0",
     "react-leaflet-draw": "^0.21.0"
   }
 }

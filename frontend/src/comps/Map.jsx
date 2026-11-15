@@ -85,8 +85,8 @@ export default function Map({ onLocationChange }) {
       longitude: longitude.toFixed(6)
     });
 
-    // Hand the farm centre to the page so "Analyze My Farm" can use it
-    onLocationChange({ lat: latitude, lng: longitude });
+    // Hand the farm centre and size to the page so "Analyze My Farm" can use them
+    onLocationChange({ lat: latitude, lng: longitude, areaM2: squareMeters });
 
     // Get address and send location
     setLoadingAddress(true);

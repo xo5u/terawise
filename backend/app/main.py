@@ -6,6 +6,8 @@ from app.api.chat import router as chat_router
 
 from app.api.analysis import router as analysis_router
 from app.api.data import router as data_router
+from app.api.recommend import router as recommend_router
+from app.api.session import router as session_router
 from app.services.geocoding import get_region_name
 
 app = FastAPI(title="Terawise API", version="1.0.0")
@@ -19,6 +21,8 @@ app.add_middleware(
 
 app.include_router(data_router)
 app.include_router(analysis_router)
+app.include_router(recommend_router)
+app.include_router(session_router)
 app.include_router(chat_router)
 
 
