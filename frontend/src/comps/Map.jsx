@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { MapContainer, TileLayer, FeatureGroup } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import { area } from "@turf/area";
+import { centroid } from "@turf/centroid";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
@@ -17,14 +18,56 @@ export default function Map() {
   ];
 
   const featureGroupRef = useRef(null);
+
   const [farmArea, setFarmArea] = useState(null);
   const [coordinates, setCoordinates] = useState(null);
+  const [farmAddress, setFarmAddress] = useState("");
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const [apiStatus, setApiStatus] = useState("");
 
-  // Calculate selected area
-  function calculateArea(layer) {
-    const squareMeters = area(layer.toGeoJSON());
+  // Get readable address from coordinates
+  async function getAddress(lat, lng) {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
 
-    const acres = squareMeters / 4046.856;
+    if (!response.ok) {
+      throw new Error("Could not retrieve farm address");
+    }
+
+    const data = await response.json();
+
+    return data.display_name || "Address not found";
+  }
+
+  // Send coordinates to FastAPI
+  async function sendLocation(lat, lng) {
+    const response = await fetch("http://127.0.0.1:8000/api/location", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        lat: lat,
+        lng: lng
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to send location to backend");
+    }
+
+    return await response.json();
+  }
+
+  // Calculate farm area and retrieve its location
+  async function calculateArea(layer) {
+    const geoJSON = layer.toGeoJSON();
+
+    // Calculate area
+    const squareMeters = area(geoJSON);
+
+    const acres = squareMeters / 4046.8564224;
     const hectares = squareMeters / 10000;
 
     setFarmArea({
@@ -33,13 +76,34 @@ export default function Map() {
       squareMeters: squareMeters.toFixed(2)
     });
 
-    // Get the center of the selected farm
-    const center = layer.getBounds().getCenter();
+    // Calculate polygon centroid
+    const center = centroid(geoJSON);
+    const [longitude, latitude] = center.geometry.coordinates;
 
     setCoordinates({
-      latitude: center.lat.toFixed(6),
-      longitude: center.lng.toFixed(6)
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6)
     });
+
+    // Get address and send location
+    setLoadingAddress(true);
+    setFarmAddress("");
+    setApiStatus("");
+
+    try {
+      const address = await getAddress(latitude, longitude);
+      setFarmAddress(address);
+
+      const result = await sendLocation(latitude, longitude);
+
+      console.log("Backend response:", result);
+      setApiStatus("Location sent successfully");
+    } catch (error) {
+      console.error("Error:", error);
+      setApiStatus(error.message);
+    } finally {
+      setLoadingAddress(false);
+    }
   }
 
   // When user finishes drawing
@@ -68,15 +132,22 @@ export default function Map() {
   function handleDeleted() {
     setFarmArea(null);
     setCoordinates(null);
+    setFarmAddress("");
+    setApiStatus("");
   }
 
   return (
     <div className="map-wrapper">
-
       <h2>Select Your Farm Area</h2>
-      <p>Draw a rectangle or polygon around your farm.</p>
+      <p>Draw a polygon around your farm boundary.</p>
+      <p>
+            <strong>Address:</strong>{" "}
+            {loadingAddress
+              ? "Getting address..."
+              : farmAddress || "Address unavailable"}
+      </p>
 
-        <MapContainer
+      <MapContainer
         center={position}
         zoom={4}
         minZoom={4}
@@ -84,7 +155,7 @@ export default function Map() {
         maxBounds={usaBounds}
         maxBoundsViscosity={1.0}
         className="farm-map"
-        >
+      >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -106,7 +177,6 @@ export default function Map() {
             }}
           />
         </FeatureGroup>
-
       </MapContainer>
 
       {farmArea && (
@@ -127,14 +197,18 @@ export default function Map() {
 
           <p>Area: {farmArea.squareMeters} m²</p>
 
-          <p>
-            Latitude: {coordinates.latitude}
-            <br />
-            Longitude: {coordinates.longitude}
-          </p>
+          <h4>Farm Location</h4>
+
+          {coordinates && (
+            <>
+              <p>Latitude: {coordinates.latitude}</p>
+              <p>Longitude: {coordinates.longitude}</p>
+            </>
+          )}
+
+          <p>{apiStatus}</p>
         </div>
       )}
-
     </div>
   );
 }
