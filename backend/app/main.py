@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from app.api.analysis import router as analysis_router
 from app.api.data import router as data_router
 from app.services.geocoding import get_region_name
 
@@ -16,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(data_router)
+app.include_router(analysis_router)
 
 
 class Location(BaseModel):

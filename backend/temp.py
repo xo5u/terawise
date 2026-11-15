@@ -59,6 +59,31 @@ def next_n_months(start_year, start_month, n):
       year += 1
 
 
+def monthly_estimates(lat, lon, months=12):
+  """Historical-average temperature estimate for the next `months` months."""
+  monthly = fetch_monthly_history(lat, lon)
+
+  today = date.today()
+  start_year = today.year if today.month < 12 else today.year + 1
+  start_month = today.month + 1 if today.month < 12 else 1
+
+  results = []
+  for year, month in next_n_months(start_year, start_month, months):
+    samples = monthly[month]
+
+    if not all(samples[k] for k in ("avg", "max", "min")):
+      continue
+
+    results.append({
+        "month": f"{year}-{month:02d}",
+        "average": round(mean(samples["avg"]), 2),
+        "maximum": round(mean(samples["max"]), 2),
+        "minimum": round(mean(samples["min"]), 2),
+    })
+
+  return results
+
+
 def main():
   parser = argparse.ArgumentParser(
       description="Estimate monthly temperatures from NASA POWER history."
@@ -76,40 +101,15 @@ def main():
   if args.months < 1:
     parser.error("--months must be an integer >= 1")
 
-  monthly = fetch_monthly_history(args.lat, args.lon)
+  results = monthly_estimates(args.lat, args.lon, args.months)
 
-  today = date.today()
-  start_year = today.year if today.month < 12 else today.year + 1
-  start_month = today.month + 1 if today.month < 12 else 1
-
-  results = []
   print(f"\nEstimated Monthly Temperatures - next {args.months} month(s)\n")
-
-  for year, month in next_n_months(start_year, start_month, args.months):
-    samples = monthly[month]
-
-    if not all(samples[k] for k in ("avg", "max", "min")):
-      print(f"{year}-{month:02d}: No data")
-      continue
-
-    avg = round(mean(samples["avg"]), 2)
-    max_temp = round(mean(samples["max"]), 2)
-    min_temp = round(mean(samples["min"]), 2)
-
-    result = {
-        "month": f"{year}-{month:02d}",
-        "average": avg,
-        "maximum": max_temp,
-        "minimum": min_temp,
-    }
-
-    results.append(result)
-
+  for result in results:
     print(
         f'{result["month"]} | '
-        f"Average: {avg} °C | "
-        f"Max: {max_temp} °C | "
-        f"Min: {min_temp} °C"
+        f'Average: {result["average"]} °C | '
+        f'Max: {result["maximum"]} °C | '
+        f'Min: {result["minimum"]} °C'
     )
 
   with open("temperature_monthly_estimate.csv", "w", newline="") as file:
