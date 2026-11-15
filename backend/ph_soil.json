@@ -1,0 +1,14 @@
+[
+    {
+        "soil": "Diablo clay",
+        "depth_top_cm": "0",
+        "depth_bottom_cm": "13",
+        "ph": "7"
+    },
+    {
+        "soil": "Diablo clay",
+        "depth_top_cm": "13",
+        "depth_bottom_cm": "46",
+        "ph": "6.7"
+    }
+]
