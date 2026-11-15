@@ -2,6 +2,7 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from app.api.chat import router as chat_router
 
 from app.api.analysis import router as analysis_router
 from app.api.data import router as data_router
@@ -22,6 +23,7 @@ app.include_router(data_router)
 app.include_router(analysis_router)
 app.include_router(recommend_router)
 app.include_router(session_router)
+app.include_router(chat_router)
 
 
 class Location(BaseModel):
