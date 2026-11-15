@@ -1,13 +1,30 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Header from "./comps/header.jsx";
-import Map from "./comps/map.jsx";
+import Header from "./comps/Header.jsx";
+import Map from "./comps/Map.jsx";
 import Results from "./comps/Result.jsx";
 import './styles.css';
-import Footer from './comps/footer.jsx';
+import Footer from './comps/Footer.jsx';
+import { fetchAllData } from './api.js';
 
 function App() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleAnalyze() {
+    setLoading(true);
+    setError(null);
+    try {
+      setData(await fetchAllData());
+    } catch (err) {
+      setData(null);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <Header />
@@ -46,12 +63,12 @@ function App() {
             </select>
           </div>
           <input type="text" placeholder="Total cost" className="cost-inputs" />
-          <button className="analyze-btn">
-            Analyze My Farm
+          <button className="analyze-btn" onClick={handleAnalyze} disabled={loading}>
+            {loading ? "Loading..." : "Analyze My Farm"}
           </button>
         </section>
       </main>
-      <Results />
+      <Results data={data} loading={loading} error={error} />
       <Footer />
     </>
   );
