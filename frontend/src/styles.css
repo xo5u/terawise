@@ -113,6 +113,17 @@ button:focus-visible { outline: 3px solid #64ae98; outline-offset: 3px; }
   background: #286638;
 }
 
+.analyze-btn:disabled {
+  background: #a8c4ae;
+  cursor: not-allowed;
+}
+
+.analyze-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #777;
+}
+
 .cost-inputs {
   width: 100%;
   padding: 12px;

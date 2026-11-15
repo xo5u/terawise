@@ -1,11 +1,28 @@
 import "./Result.css";
 
-function DataTable({ title, rows }) {
-  if (!Array.isArray(rows) || rows.length === 0) {
+const UNITS = {
+  rainfall_mm: "mm",
+  average: "°C",
+  maximum: "°C",
+  minimum: "°C",
+  nitrogen_g_kg: "g/kg",
+  surface_percent: "%",
+  rootzone_percent: "%",
+  distance_km: "km"
+};
+
+function DataTable({ title, dataset }) {
+  if (!dataset) {
+    return null;
+  }
+
+  const rows = dataset.rows || [];
+
+  if (rows.length === 0) {
     return (
       <section className="result-card">
         <h2>{title}</h2>
-        <p>No data available.</p>
+        <p className="dataset-note">{dataset.error || "No data available."}</p>
       </section>
     );
   }
@@ -20,7 +37,10 @@ function DataTable({ title, rows }) {
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column}>{column.replace(/_/g, " ")}</th>
+                <th key={column}>
+                  {column.replace(/_/g, " ")}
+                  {UNITS[column] ? ` (${UNITS[column]})` : ""}
+                </th>
               ))}
             </tr>
           </thead>
@@ -44,10 +64,16 @@ export default function Results({ data, loading, error }) {
     <main className="results-page">
       <div className="results-header">
         <h1>Farm Analysis Results</h1>
-        <p>Data loaded from the Terawise backend</p>
+        {data ? (
+          <p>
+            Live data for {Number(data.lat).toFixed(5)}, {Number(data.lon).toFixed(5)}
+          </p>
+        ) : (
+          <p>Data loaded from the Terawise backend</p>
+        )}
       </div>
 
-      {loading && <p className="status-message">Loading data...</p>}
+      {loading && <p className="status-message">Loading data for your farm...</p>}
       {error && <p className="status-message error">{error}</p>}
       {!loading && !error && !data && (
         <p className="status-message">Click "Analyze My Farm" to load the results.</p>
@@ -55,9 +81,11 @@ export default function Results({ data, loading, error }) {
 
       {data && (
         <>
-          <DataTable title="Monthly Rainfall" rows={data.rain} />
-          <DataTable title="Monthly Temperature" rows={data.temperature} />
-          <DataTable title="Soil pH" rows={data.ph} />
+          <DataTable title="Monthly Rainfall" dataset={data.rain} />
+          <DataTable title="Monthly Temperature" dataset={data.temperature} />
+          <DataTable title="Soil pH" dataset={data.ph} />
+          <DataTable title="Soil Nitrogen" dataset={data.nitrogen} />
+          <DataTable title="Soil Moisture" dataset={data.moisture} />
         </>
       )}
     </main>
