@@ -29,3 +29,9 @@
 .status-message.error {
   color: #b42318;
 }
+
+.dataset-note {
+  color: #777;
+  font-size: 14px;
+  margin: 0;
+}

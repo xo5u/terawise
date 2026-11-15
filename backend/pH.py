@@ -67,42 +67,38 @@ def get_soil_ph(lat, lon):
     results = [dict(zip(headers, row)) for row in rows]
     return filter_relevant_depths(results)
 
+# (top, bottom) of the zones we report: the fertilizer zone and the upper root zone.
+DEPTH_ZONES = [(0, 20), (20, 50)]
+
+
 def filter_relevant_depths(results):
     """
-    Keep only the two most relevant soil layers:
+    Keep the two most relevant soil layers:
     1. Surface layer (fertilizer zone ~0-20 cm)
     2. Next layer (around average root depth)
-    """
-    relevant = []
 
+    Horizons are matched by overlap, because a single horizon often spans a
+    whole zone (0-30 cm is common) and would be missed by an exact-fit test.
+    """
+    horizons = []
     for item in results:
         try:
             top = float(item["depth_top_cm"])
             bottom = float(item["depth_bottom_cm"])
         except (TypeError, ValueError):
             continue
+        horizons.append((top, bottom, item))
 
-        # Layer 1:fertilizer (0-20 cm)
-        if top <= 5 and bottom <= 25:
-            relevant.append(item)
+    horizons.sort(key=lambda h: h[0])
 
-        # Layer 2: Upper root zone (15-40 cm)
-        elif top >= 10 and top <= 25 and bottom <= 50:
-            relevant.append(item)
+    relevant = []
+    for zone_top, zone_bottom in DEPTH_ZONES:
+        for top, bottom, item in horizons:
+            if top < zone_bottom and bottom > zone_top and item not in relevant:
+                relevant.append(item)
+                break
 
-    # Keep maximum 2 results
-    return relevant[:2]
-
-
-def save_csv(rows, filename="ph_soil.csv"):
-    with open(filename, "w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(
-            file,
-            fieldnames=["soil", "depth_top_cm", "depth_bottom_cm", "ph"]
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-    return filename
+    return relevant
 
 
 def save_csv(rows, filename="ph_soil.csv"):
@@ -116,21 +112,29 @@ def save_csv(rows, filename="ph_soil.csv"):
     return filename
 
 
-try:
-    results = get_soil_ph(LAT, LON)
+def to_rows(results):
+    """Flatten the SDA records into the shape used by the CSV and the API."""
+    return [
+        {
+            "soil": clean_soil_name(item["soil_name"]),
+            "depth_top_cm": item["depth_top_cm"],
+            "depth_bottom_cm": item["depth_bottom_cm"],
+            "ph": item["ph"],
+        }
+        for item in results
+    ]
 
-    if not results:
-        print("No soil pH data found for this location.")
-    else:
-        rows = []
-        for item in results:
-            row = {
-                "soil": clean_soil_name(item["soil_name"]),
-                "depth_top_cm": item["depth_top_cm"],
-                "depth_bottom_cm": item["depth_bottom_cm"],
-                "ph": item["ph"],
-            }
-            rows.append(row)
+
+def main():
+    try:
+        results = get_soil_ph(LAT, LON)
+
+        if not results:
+            print("No soil pH data found for this location.")
+            return
+
+        rows = to_rows(results)
+        for row in rows:
             print(
                 f"Soil: {row['soil']} | "
                 f"Depth: {row['depth_top_cm']}-{row['depth_bottom_cm']} cm | "
@@ -139,7 +143,11 @@ try:
 
         print(f"\nSaved: {save_csv(rows)}")
 
-except requests.RequestException as error:
-    print("API request failed:", error)
-except (ValueError, KeyError) as error:
-    print("Data error:", error)
+    except requests.RequestException as error:
+        print("API request failed:", error)
+    except (ValueError, KeyError) as error:
+        print("Data error:", error)
+
+
+if __name__ == "__main__":
+    main()

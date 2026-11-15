@@ -5,18 +5,24 @@ import Map from "./comps/Map.jsx";
 import Results from "./comps/Result.jsx";
 import './styles.css';
 import Footer from './comps/Footer.jsx';
-import { fetchAllData } from './api.js';
+import { fetchAnalysis } from './api.js';
 
 function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [location, setLocation] = useState(null);
 
   async function handleAnalyze() {
+    if (!location) {
+      setError("Draw your farm boundary on the map first.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      setData(await fetchAllData());
+      setData(await fetchAnalysis(location.lat, location.lng));
     } catch (err) {
       setData(null);
       setError(err.message);
@@ -32,7 +38,7 @@ function App() {
       <main className="main-layout">
 
         <section className="map-section">
-          <Map />
+          <Map onLocationChange={setLocation} />
         </section>
 
         <section className="farm-form">
@@ -63,9 +69,16 @@ function App() {
             </select>
           </div>
           <input type="text" placeholder="Total cost" className="cost-inputs" />
-          <button className="analyze-btn" onClick={handleAnalyze} disabled={loading}>
+          <button
+            className="analyze-btn"
+            onClick={handleAnalyze}
+            disabled={loading || !location}
+          >
             {loading ? "Loading..." : "Analyze My Farm"}
           </button>
+          {!location && (
+            <p className="analyze-hint">Draw your farm boundary on the map to enable analysis.</p>
+          )}
         </section>
       </main>
       <Results data={data} loading={loading} error={error} />

@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import "./Map.css";
 
-export default function Map() {
+export default function Map({ onLocationChange }) {
   const position = [39.8283, -98.5795];
 
   const usaBounds = [
@@ -40,9 +40,9 @@ export default function Map() {
     return data.display_name || "Address not found";
   }
 
-  // Send coordinates to FastAPI
+  // Send coordinates to FastAPI through the Vite proxy
   async function sendLocation(lat, lng) {
-    const response = await fetch("http://127.0.0.1:8000/api/location", {
+    const response = await fetch("/api/location", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -84,6 +84,9 @@ export default function Map() {
       latitude: latitude.toFixed(6),
       longitude: longitude.toFixed(6)
     });
+
+    // Hand the farm centre to the page so "Analyze My Farm" can use it
+    onLocationChange({ lat: latitude, lng: longitude });
 
     // Get address and send location
     setLoadingAddress(true);
@@ -134,6 +137,7 @@ export default function Map() {
     setCoordinates(null);
     setFarmAddress("");
     setApiStatus("");
+    onLocationChange(null);
   }
 
   return (
