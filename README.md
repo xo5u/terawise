@@ -51,6 +51,16 @@ From the `backend` folder:
 
 Run the rainfall unit tests with `.\.venv\Scripts\python.exe -m pytest test_rain_unit.py -v`.
 
+## Planting history
+
+Click **Plant** on a recommended crop to save it through `POST /api/history` into the Supabase `planting_history` table. The history view loads saved plantings through `GET /api/history`.
+
+Enable **Anonymous Sign-Ins** in Supabase under **Authentication → Sign In / Providers**. The existing history table references `auth.users`, so a real Supabase session is required. No login form is needed: `POST /api/session` creates an anonymous session, and the browser stores it under `terawise.history.session`. History and recommendation requests send its bearer token; the backend validates the token and derives the owner rather than trusting a client-provided user ID. Clearing browser storage or switching browsers loses access to that anonymous session's history. Expired sessions refresh through `POST /api/session/refresh`.
+
+Configure the backend's `.env` with `SUPABASE_URL` and the appropriate Supabase key (`SUPABASE_SECRET_KEY` or `SUPABASE_PUBLISHABLE_KEY`). Keep database keys on the server; do not put them in frontend code or `VITE_` variables.
+
+The existing base `planting_history` table is supported. Run `backend/migrations/001_crop_recommendation.sql` in the Supabase SQL editor to enable crop name and nutrition-demand snapshots that preserve the values recorded at planting time.
+
 ## Structure
 
 - `backend/app/main.py`: FastAPI application and health endpoint

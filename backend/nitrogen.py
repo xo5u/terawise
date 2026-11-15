@@ -1,10 +1,18 @@
 import csv
 import math
+import threading
+import time
 
 import numpy as np
 import requests
 from rasterio.io import MemoryFile
 from rasterio.transform import xy
+
+# Nitrogen, texture and pH all read the same ISRIC service. Firing them in
+# parallel makes it time out, so requests queue and retry briefly.
+_ISRIC_SLOTS = threading.Semaphore(4)
+RETRY_ATTEMPTS = 3
+RETRY_BACKOFF_SECONDS = 2
 
 LAT = 32.2211
 LON = 35.2544
@@ -37,13 +45,13 @@ def haversine_km(lat1, lon1, lat2, lon2):
     return 2 * r * np.arcsin(np.sqrt(a))
 
 
-def fetch_window(lat, lon, half_width):
+def fetch_window(lat, lon, half_width, map_name="/map/nitrogen.map", coverage=COVERAGE):
     params = {
-        "map": "/map/nitrogen.map",
+        "map": map_name,
         "SERVICE": "WCS",
         "VERSION": "2.0.1",
         "REQUEST": "GetCoverage",
-        "COVERAGEID": COVERAGE,
+        "COVERAGEID": coverage,
         "FORMAT": "image/tiff",
         "SUBSET": [
             f"long({lon - half_width},{lon + half_width})",
@@ -52,7 +60,25 @@ def fetch_window(lat, lon, half_width):
         "SUBSETTINGCRS": "http://www.opengis.net/def/crs/EPSG/0/4326",
         "OUTPUTCRS": "http://www.opengis.net/def/crs/EPSG/0/4326",
     }
-    response = requests.get(WCS_URL, params=params, timeout=(10, 60))
+    response = None
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            with _ISRIC_SLOTS:
+                # A short read timeout is deliberate: when the service stalls it
+                # stalls for minutes, so abandoning early and retrying is faster
+                # than waiting out a dead connection.
+                response = requests.get(WCS_URL, params=params, timeout=(10, 35))
+            # 503 means the shared service is shedding load, not that the point
+            # has no data, so it is worth backing off and retrying.
+            if response.status_code != 503:
+                break
+        except (requests.Timeout, requests.ConnectionError):
+            if attempt == RETRY_ATTEMPTS - 1:
+                raise
+        if attempt == RETRY_ATTEMPTS - 1:
+            break
+        time.sleep(RETRY_BACKOFF_SECONDS * (attempt + 1))
+
     # The server answers 400 ExtentError when the window lies entirely outside
     # SoilGrids coverage (open ocean, Antarctica); that is simply "no data here".
     if response.status_code == 400 and "ExtentError" in response.text:

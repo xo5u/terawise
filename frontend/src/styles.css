@@ -145,3 +145,36 @@ button:focus-visible { outline: 3px solid #64ae98; outline-offset: 3px; }
     height: 400px;
   }
 }
+
+.secondary-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  background: #fff;
+  color: #286638;
+  border: 1px solid #39864B;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-readout {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.farm-form input[type="date"],
+.farm-form input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  font-size: 15px;
+  box-sizing: border-box;
+}

@@ -7,3 +7,7 @@ __pycache__/
 .env.*
 !.env.example
 .idea/
+
+.soil_cache.json
+backend/.soil_cache.json
+backend/uvicorn.log

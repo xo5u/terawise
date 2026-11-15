@@ -16,7 +16,7 @@ HISTORY_END = 2025
 
 def fetch_monthly_history(lat, lon):
   params = {
-      "parameters": "T2M,T2M_MAX,T2M_MIN",
+      "parameters": "T2M,T2M_MAX,T2M_MIN,RH2M",
       "community": "AG",
       "latitude": lat,
       "longitude": lon,
@@ -31,7 +31,7 @@ def fetch_monthly_history(lat, lon):
 
   data = response.json()["properties"]["parameter"]
 
-  monthly = defaultdict(lambda: {"avg": [], "max": [], "min": []})
+  monthly = defaultdict(lambda: {"avg": [], "max": [], "min": [], "humidity": []})
 
   for day, temp in data["T2M"].items():
     month = int(day[4:6])
@@ -40,6 +40,7 @@ def fetch_monthly_history(lat, lon):
         "avg": temp,
         "max": data["T2M_MAX"].get(day),
         "min": data["T2M_MIN"].get(day),
+        "humidity": data.get("RH2M", {}).get(day),
     }
 
     for name, value in values.items():
@@ -57,6 +58,20 @@ def next_n_months(start_year, start_month, n):
     if month > 12:
       month = 1
       year += 1
+
+
+def monthly_climate(lat, lon):
+  """Per calendar month: mean temperature and mean relative humidity."""
+  monthly = fetch_monthly_history(lat, lon)
+  climate = {}
+  for month, samples in monthly.items():
+    if not samples["avg"]:
+      continue
+    climate[month] = {
+        "temperature_c": round(mean(samples["avg"]), 2),
+        "humidity_percent": round(mean(samples["humidity"]), 2) if samples["humidity"] else None,
+    }
+  return climate
 
 
 def monthly_estimates(lat, lon, months=12):
