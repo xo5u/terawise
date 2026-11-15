@@ -1,0 +1,72 @@
+[
+    {
+        "month": "2026-11",
+        "days_counted": "16",
+        "rainfall_mm": "26.25"
+    },
+    {
+        "month": "2026-12",
+        "days_counted": "31",
+        "rainfall_mm": "68.56"
+    },
+    {
+        "month": "2027-01",
+        "days_counted": "31",
+        "rainfall_mm": "100.02"
+    },
+    {
+        "month": "2027-02",
+        "days_counted": "28",
+        "rainfall_mm": "78.2"
+    },
+    {
+        "month": "2027-03",
+        "days_counted": "31",
+        "rainfall_mm": "68.08"
+    },
+    {
+        "month": "2027-04",
+        "days_counted": "30",
+        "rainfall_mm": "24.72"
+    },
+    {
+        "month": "2027-05",
+        "days_counted": "31",
+        "rainfall_mm": "10.22"
+    },
+    {
+        "month": "2027-06",
+        "days_counted": "30",
+        "rainfall_mm": "1.96"
+    },
+    {
+        "month": "2027-07",
+        "days_counted": "31",
+        "rainfall_mm": "0.7"
+    },
+    {
+        "month": "2027-08",
+        "days_counted": "31",
+        "rainfall_mm": "0.88"
+    },
+    {
+        "month": "2027-09",
+        "days_counted": "30",
+        "rainfall_mm": "4.06"
+    },
+    {
+        "month": "2027-10",
+        "days_counted": "31",
+        "rainfall_mm": "11.9"
+    },
+    {
+        "month": "2027-11",
+        "days_counted": "14",
+        "rainfall_mm": "22.97"
+    },
+    {
+        "month": "total",
+        "days_counted": "365",
+        "rainfall_mm": "418.52"
+    }
+]
